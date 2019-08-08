@@ -4,6 +4,7 @@ simplePSO run script for dimerization_model.py
 '''
 from pysb.simulator import ScipyOdeSimulator
 import numpy as np
+from scipy.stats import norm
 from simplepso.pso import PSO
 from dimerization_model import model
 
@@ -28,7 +29,7 @@ def cost(position):
     logp_data = np.sum(like_data.logpdf(sim['observable']))
     if np.isnan(logp_data):
         logp_data = np.inf
-    return -logp_data
+    return -logp_data,
 
 # Setup the particle swarm optimization run
  

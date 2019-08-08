@@ -4,6 +4,7 @@ simplePSO run script for dimerization_model_swarmit.py
 '''
 from pysb.simulator import ScipyOdeSimulator
 import numpy as np
+from scipy.stats import norm
 from simplepso.pso import PSO
 from dimerization_model_swarmit import model,swarm_param
 
