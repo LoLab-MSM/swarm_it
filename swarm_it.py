@@ -17,8 +17,8 @@ try:
     from pysb.simulator import ScipyOdeSimulator
 except ImportError:
     pass
-from scipy.stats import norm
 import numpy as np
+from scipy.stats import norm
 from simplepso.pso import PSO
 
 def is_numbers(inputString):
@@ -454,7 +454,7 @@ if __name__ == '__main__':
     out_file.write("\n")
     out_file.write("from pysb.simulator import ScipyOdeSimulator\n")
     out_file.write("import numpy as np\n")
-    #out_file.write("from scipy.stats import norm,uniform\n")
+    out_file.write("from scipy.stats import norm\n")
     out_file.write("from simplepso.pso import PSO\n")
 
     #out_file.write("import inspect\n")
