@@ -56,10 +56,10 @@ python -m swarm_it model.py output_path
 ```      
 where output_path is the directory/folder location where you want the generated script to be saved as "simplepso_model_name.py".
 
-The command line version of swarm_it also has support for setting the calibrated model parameters via an instance of [SwarmParam]() defined along with the model.   
+The command line version of swarm_it also has support for setting the calibrated model parameters via an instance of [SwarmParam](https://github.com/LoLab-VU/swarm_it/tree/master#swarmparam) defined along with the model.   
 
 
-### Progammatic use via the SwarmIt class
+#### Progammatic use via the SwarmIt class
 The swarm_it utility can be used progammatically via the SwarmIt
 class. It's importable from swarm_it:
 ```python
