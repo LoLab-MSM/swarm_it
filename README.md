@@ -3,7 +3,7 @@
 ![Python version badge](https://img.shields.io/badge/python-3.6-blue.svg)
 [![license](https://img.shields.io/github/license/LoLab-VU/swarm_it.svg)](LICENSE)
 ![version](https://img.shields.io/badge/version-0.1.1-orange.svg)
-[![release](https://img.shields.io/github/release-pre/LoLab-VU/swarm_it.svg)](https://github.com/LoLab-VU/swarm_it/releases/tag/v0.1.0)
+[![release](https://img.shields.io/github/release-pre/LoLab-VU/swarm_it.svg)](https://github.com/LoLab-VU/swarm_it/releases/tag/v0.1.1)
 
 **swarm_it** is a python utility designed to abstract away some of the effort in setting up Particle Swarm Optimization (PSO)-based calibrations of biological models in the [PySB](http://pysb.org/) format using [simplePSO](https://github.com/LoLab-VU/ParticleSwarmOptimization).
 
