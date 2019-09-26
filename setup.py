@@ -1,7 +1,7 @@
 from distutils.core import setup
 
 setup(name='swarm_it',
-      version='0.1.0',
+      version='0.1.1',
       description='Utility to help setup PSO runs for PySB models.',
       author='Blake A. Wilson',
       author_email='blakeaw1102@gmail.com',

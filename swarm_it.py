@@ -251,11 +251,11 @@ class SwarmIt(object):
                 if rule.rate_reverse:
                      swarm_param(rule.rate_reverse)
             parm_mask = swarm_param.mask(model.parameters)
-            self._sampled_parameters = [SampledParameter(parm.name, *swarm_param[parm.name]) for i,parm in enumerate(model.parameters) if parm_mask[i]]
+#            self._sampled_parameters = [SampledParameter(parm.name, *swarm_param[parm.name]) for i,parm in enumerate(model.parameters) if parm_mask[i]]
             self._rate_mask = parm_mask
             self._starting_position = swarm_param.centers()
             self._lower = swarm_param.lower()
-            self._upper = self.upper()
+            self._upper = swarm_param.upper()
         self._param_values = np.array([param.value for param in model.parameters])
         return
 
