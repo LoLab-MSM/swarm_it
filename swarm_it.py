@@ -11,6 +11,7 @@ dataset.
 """
 
 import importlib
+import warnings
 import os.path
 try:
     import pysb
@@ -228,14 +229,17 @@ class SwarmIt(object):
         self._like_data = dict()
         self._data = dict()
         self._data_mask = dict()
-        for observable_key in observable_data.keys():
-            self._like_data[observable_key] = norm(loc=observable_data[observable_key][0],
-                                               scale=observable_data[observable_key][1])
-            self._data[observable_key] = observable_data[observable_key][0]
-            self._data_mask[observable_key] = observable_data[observable_key][2]
-            # print(observable_data[observable_key][2])
-            if observable_data[observable_key][2] is None:
-                self._data_mask[observable_key] = range(len(self.timespan))
+        if observable_data is not None:
+            for observable_key in observable_data.keys():
+                self._like_data[observable_key] = norm(loc=observable_data[observable_key][0],
+                                                   scale=observable_data[observable_key][1])
+                self._data[observable_key] = observable_data[observable_key][0]
+                self._data_mask[observable_key] = observable_data[observable_key][2]
+                # print(observable_data[observable_key][2])
+                if observable_data[observable_key][2] is None:
+                    self._data_mask[observable_key] = range(len(self.timespan))
+        else:
+            warnings.warn('The observable_data input was set to None, which is only compatible with the use custom cost functions.')            
         self._model_solver = solver(self.model, tspan=self.timespan, **solver_kwargs)
         if swarm_param is not None:
             parm_mask = swarm_param.mask(model.parameters)
