@@ -257,6 +257,7 @@ class SwarmIt(object):
             self._lower = swarm_param.lower()
             self._upper = swarm_param.upper()
         self._param_values = np.array([param.value for param in model.parameters])
+        self._custom_cost = None
         return
 
     def norm_logpdf_cost(self, position):
@@ -327,8 +328,33 @@ class SwarmIt(object):
             return np.inf
         return logl,
 
+    def custom_cost(self, position):
+        """Compute the cost using the negative sum of squared errors estimator.
+
+        Args:
+            position (numpy.array): The parameter vector the compute cost
+                of.
+
+        Returns:
+            float: The natural logarithm of the likelihood estimate.
+
+        """
+        Y = np.copy(position)
+        params = self._param_values.copy()
+        params[self._rate_mask] = 10.**Y
+        sim = self._model_solver.run(param_values=[params]).all
+        logl = self._custom_cost(self.model, sim)
+        if np.isnan(logl):
+            return np.inf
+        return logl,
+
+    def set_custom_cost(self, cost_func):
+
+        self._custom_cost = cost_func
+        return
+
     def __call__(self, pso_kwargs=None,
-                 cost_type='norm_logpdf'):
+                 cost_type='norm_logpdf', custom_cost=None):
         """Call the SwarmIt instance to construct to instance of the NestedSampling object.
 
         Args:
@@ -355,6 +381,9 @@ class SwarmIt(object):
             cost = self.mse_cost
         elif cost_type == 'sse':
             cost = self.sse_cost
+        elif (cost_type == 'custom') and (custom_cost is not None):
+            self.set_custom_cost(custom_cost)
+            cost = self.custom_cost
         else:
             cost = self.norm_logpdf_cost
 
