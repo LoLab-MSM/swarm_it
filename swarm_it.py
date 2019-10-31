@@ -154,9 +154,15 @@ class SwarmParam(object):
     def add_all_kinetic_params(self, pysb_model):
         for rule in pysb_model.rules:
             if rule.rate_forward:
-                 self.__call__(rule.rate_forward)
+                try:
+                    self.__call__(rule.rate_forward)
+                except:
+                    pass
             if rule.rate_reverse:
-                 self.__call__(rule.rate_reverse)
+                try:
+                    self.__call__(rule.rate_reverse)
+                except:
+                    pass
         return
 
     def add_all_nonkinetic_params(self, pysb_model):
@@ -239,7 +245,7 @@ class SwarmIt(object):
                 if observable_data[observable_key][2] is None:
                     self._data_mask[observable_key] = range(len(self.timespan))
         else:
-            warnings.warn('The observable_data input was set to None, which is only compatible with the use custom cost functions.')            
+            warnings.warn('The observable_data input was set to None, which is only compatible with the use custom cost functions.')
         self._model_solver = solver(self.model, tspan=self.timespan, **solver_kwargs)
         if swarm_param is not None:
             parm_mask = swarm_param.mask(model.parameters)
@@ -250,10 +256,10 @@ class SwarmIt(object):
         else:
             swarm_param = SwarmParam()
             for rule in model.rules:
-                if rule.rate_forward:
-                     swarm_param(rule.rate_forward)
-                if rule.rate_reverse:
-                     swarm_param(rule.rate_reverse)
+                if rule.rate_forward and (rule.rate_forward in model.parameters):
+                    swarm_param(rule.rate_forward)
+                if rule.rate_reverse and (rule.rate_reverse in model.parameters):
+                    swarm_param(rule.rate_reverse)    
             parm_mask = swarm_param.mask(model.parameters)
 #            self._sampled_parameters = [SampledParameter(parm.name, *swarm_param[parm.name]) for i,parm in enumerate(model.parameters) if parm_mask[i]]
             self._rate_mask = parm_mask
