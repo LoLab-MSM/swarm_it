@@ -11,6 +11,7 @@ dataset.
 """
 
 import importlib
+import warnings
 import os.path
 try:
     import pysb
@@ -153,9 +154,15 @@ class SwarmParam(object):
     def add_all_kinetic_params(self, pysb_model):
         for rule in pysb_model.rules:
             if rule.rate_forward:
-                 self.__call__(rule.rate_forward)
+                try:
+                    self.__call__(rule.rate_forward)
+                except:
+                    pass
             if rule.rate_reverse:
-                 self.__call__(rule.rate_reverse)
+                try:
+                    self.__call__(rule.rate_reverse)
+                except:
+                    pass
         return
 
     def add_all_nonkinetic_params(self, pysb_model):
@@ -228,14 +235,17 @@ class SwarmIt(object):
         self._like_data = dict()
         self._data = dict()
         self._data_mask = dict()
-        for observable_key in observable_data.keys():
-            self._like_data[observable_key] = norm(loc=observable_data[observable_key][0],
-                                               scale=observable_data[observable_key][1])
-            self._data[observable_key] = observable_data[observable_key][0]
-            self._data_mask[observable_key] = observable_data[observable_key][2]
-            # print(observable_data[observable_key][2])
-            if observable_data[observable_key][2] is None:
-                self._data_mask[observable_key] = range(len(self.timespan))
+        if observable_data is not None:
+            for observable_key in observable_data.keys():
+                self._like_data[observable_key] = norm(loc=observable_data[observable_key][0],
+                                                   scale=observable_data[observable_key][1])
+                self._data[observable_key] = observable_data[observable_key][0]
+                self._data_mask[observable_key] = observable_data[observable_key][2]
+                # print(observable_data[observable_key][2])
+                if observable_data[observable_key][2] is None:
+                    self._data_mask[observable_key] = range(len(self.timespan))
+        else:
+            warnings.warn('The observable_data input was set to None, which is only compatible with the use custom cost functions.')
         self._model_solver = solver(self.model, tspan=self.timespan, **solver_kwargs)
         if swarm_param is not None:
             parm_mask = swarm_param.mask(model.parameters)
@@ -246,10 +256,10 @@ class SwarmIt(object):
         else:
             swarm_param = SwarmParam()
             for rule in model.rules:
-                if rule.rate_forward:
-                     swarm_param(rule.rate_forward)
-                if rule.rate_reverse:
-                     swarm_param(rule.rate_reverse)
+                if rule.rate_forward and (rule.rate_forward in model.parameters):
+                    swarm_param(rule.rate_forward)
+                if rule.rate_reverse and (rule.rate_reverse in model.parameters):
+                    swarm_param(rule.rate_reverse)    
             parm_mask = swarm_param.mask(model.parameters)
 #            self._sampled_parameters = [SampledParameter(parm.name, *swarm_param[parm.name]) for i,parm in enumerate(model.parameters) if parm_mask[i]]
             self._rate_mask = parm_mask
@@ -257,6 +267,7 @@ class SwarmIt(object):
             self._lower = swarm_param.lower()
             self._upper = swarm_param.upper()
         self._param_values = np.array([param.value for param in model.parameters])
+        self._custom_cost = None
         return
 
     def norm_logpdf_cost(self, position):
@@ -327,8 +338,33 @@ class SwarmIt(object):
             return np.inf
         return logl,
 
+    def custom_cost(self, position):
+        """Compute the cost using the negative sum of squared errors estimator.
+
+        Args:
+            position (numpy.array): The parameter vector the compute cost
+                of.
+
+        Returns:
+            float: The natural logarithm of the likelihood estimate.
+
+        """
+        Y = np.copy(position)
+        params = self._param_values.copy()
+        params[self._rate_mask] = 10.**Y
+        sim = self._model_solver.run(param_values=[params]).all
+        logl = self._custom_cost(self.model, sim)
+        if np.isnan(logl):
+            return np.inf
+        return logl,
+
+    def set_custom_cost(self, cost_func):
+
+        self._custom_cost = cost_func
+        return
+
     def __call__(self, pso_kwargs=None,
-                 cost_type='norm_logpdf'):
+                 cost_type='norm_logpdf', custom_cost=None):
         """Call the SwarmIt instance to construct to instance of the NestedSampling object.
 
         Args:
@@ -355,6 +391,9 @@ class SwarmIt(object):
             cost = self.mse_cost
         elif cost_type == 'sse':
             cost = self.sse_cost
+        elif (cost_type == 'custom') and (custom_cost is not None):
+            self.set_custom_cost(custom_cost)
+            cost = self.custom_cost
         else:
             cost = self.norm_logpdf_cost
 
