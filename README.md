@@ -2,8 +2,8 @@
 
 ![Python version badge](https://img.shields.io/badge/python-3.6-blue.svg)
 [![license](https://img.shields.io/github/license/LoLab-VU/swarm_it.svg)](LICENSE)
-![version](https://img.shields.io/badge/version-0.1.1-orange.svg)
-[![release](https://img.shields.io/github/release-pre/LoLab-VU/swarm_it.svg)](https://github.com/LoLab-VU/swarm_it/releases/tag/v0.1.1)
+![version](https://img.shields.io/badge/version-0.2.0-orange.svg)
+[![release](https://img.shields.io/github/release-pre/LoLab-VU/swarm_it.svg)](https://github.com/LoLab-VU/swarm_it/releases/tag/v0.2.0)
 
 **swarm_it** is a python utility designed to abstract away some of the effort in setting up Particle Swarm Optimization (PSO)-based calibrations of biological models in the [PySB](http://pysb.org/) format using [simplePSO](https://github.com/LoLab-VU/ParticleSwarmOptimization).
 
@@ -77,6 +77,7 @@ data = np.load('my_data.npy')
 data_sd = np.load('my_data_sd.npy')
 observable_data = dict()
 time_idxs = list(range(len(timespan)))
+# my_observable is the name of an Observable in the model.
 observable_data['my_observable'] = (data, data_sd, time_idxs)
 # Initialize the SwarmIt instance with the model details.
 swarmit = SwarmIt(my_model, observable_data, timespan)
@@ -91,31 +92,44 @@ pso.run(num_particles, num_iterations)
 print("best_theta: ",pso.best)
 ```
 
-SwarmIt constructs the PSO object to sample all of a model's kinetic rate parameters. It assumes that the priors are uniform with size 4 orders of magnitude and centered on the values defined in the model.
+#### SwarmParam
+By default SwarmIt constructs the PSO object to sample all of a model's kinetic rate parameters; it assumes that the priors are uniform with size 4 orders of magnitude and centered on the values defined in the model. However, the swarm_it module has a built-in helper class, SwarmParam, which can be used in conjunction of with SwarmIt class to set which model parameters are sampled and the corresponding sampling ranges. SwarmParam can be used at the level of PySB model definition to log which parameters to include in a Particle Swarm Optimization run, or it can be used after model definition at as long as it is defined before defining a SwarmIt object. It can be imported from swarm_it:
+```python
+from swarm_it import SwarmParam
+```
+It is passed at instantiation of the SwarmIt class via the `swarm_param` input parameter,
+```python
+swarmit = SwarmIt(model, observable_data, tspan, swarm_param=swarm_param)
+```
+which uses it to build the set of parameters to sample, their staring PSO position and bounds, as well as the parameter mask for use with built-in cost functions.
 
-In addition, SwarmIt crrently has three pre-defined loglikelihood functions with different estimators, specified with the keyword parameter cost_type:
+Note that if you flag a parameter for sampling without setting sampling bounds, SwarmParam will by default assign the parameter bounds centered on the parameter's value (as defined in the model) with a width of 4 orders of magnitude.
+
+For a more in depth example usage of SwarmParam, see the [simplepso_dimerization_model_SwarmIt_SwarmParam example](./examples/pysb_dimerization_model/simplepso_dimerization_model_SwarmIt_SwarmParam.py) and corresponding model [](./examples/pysb_dimerization_model/dimerization_model_swarm_it.py).
+
+##### Built-in cost functions
+SwarmIt currently has three pre-defined cost functions with different estimators, specified with the keyword parameter cost_type:
 ```python
 # Now build the PSO object.
 pso = swarmit(cost_type='mse')
 ```
 The options are
-  * 'norm_logpdf'=> (default) Compute the cost a the negative sum of normal distribution logpdf's over each data point
-  * 'mse'=>Compute the cost using the mean squared error estimator
-  * 'sse'=>Compute the cost using the sum of squared errors estimator.
+  * 'norm_logpdf'=> (default) Compute the cost as the negative sum of normal distribution logpdf's over each timecourse data points and each given model observable.
+  * 'mse'=>Compute the cost using the mean squared error estimator over the timecourse data and each given model observable.
+  * 'sse'=>Compute the cost using the sum of squared errors estimator over the timecourse data and each given observable.
 
 Each of these functions computes the cost estimate using the timecourse output of a model simulation for each observable defined in the `observable_data` dictionary.
-If you want to use a different or more complicated likelihood function with SwarmIt then you'll need to subclass it and either override one of the existing cost functions or define a new one.  
 
-#### SwarmParam
-The swarm_it module has a built-in helper class, SwarmParam, which can be used in conjunction of with SwarmIt class. SwarmParam can be used at the level of PySB model definition to log which parameters to include in
-a Particle Swarm Optimization run, or it can be used after model definition at as long as it is defined before defining a SwarmIt object. It can be imported from swarm_it:
+##### Custom cost function
+If you want to use a different or more complicated cost function than the built-ins, the `SwarmIt` class object can also accept a custom cost function defined by the user with the parameters `cost_type='custom'` and `custom_cost`:
 ```python
-from swarm_it import SwarmParam
+# Now build the PSO object with a custom cost function.
+def user_cost(model, simulation_output):
+    # Do something and compute the cost for this model and its evaluation.
+    return cost
+pso = swarmit(cost_type='custom', custom_cost=user_cost)
 ```
-It is passed at instantiation to the SwarmIt class, which uses it
-to build the set of parameters to use, their staring PSO position and bounds, as well as the parameter mask for the cost function.
-
-Note that if you flag a parameter for sampling without setting sampling bounds, SwarmParam will by default assign the parameter bounds centered on the parameter's value (as defined in the model) with a width of 4 orders of magnitude.
+Note that the custom cost function defined by the user, `user_cost`, should accept two parameters: the model itself and the simulation output (or trajectory). The user can then define how to compute the cost using these input objects or using other data/objects defined outside `user_cost`.
 
 ### Examples
 Additional example scripts that show how to setup and launch PSO runs using **swarm_it** can be found under [examples](./examples).
