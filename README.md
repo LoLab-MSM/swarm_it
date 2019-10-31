@@ -105,7 +105,7 @@ which uses it to build the set of parameters to sample, their staring PSO positi
 
 Note that if you flag a parameter for sampling without setting sampling bounds, SwarmParam will by default assign the parameter bounds centered on the parameter's value (as defined in the model) with a width of 4 orders of magnitude.
 
-For a more in depth example usage of SwarmParam, see the [simplepso_dimerization_model_SwarmIt_SwarmParam example](./examples/pysb_dimerization_model/simplepso_dimerization_model_SwarmIt_SwarmParam.py) and corresponding model [](./examples/pysb_dimerization_model/dimerization_model_swarm_it.py).
+For a more in depth example usage of SwarmParam, see the [simplepso_dimerization_model_SwarmIt_SwarmParam example](./examples/pysb_dimerization_model/simplepso_dimerization_model_SwarmIt_SwarmParam.py) and corresponding model [dimerization_model_swarmit](./examples/pysb_dimerization_model/dimerization_model_swarmit.py).
 
 ##### Built-in cost functions
 SwarmIt currently has three pre-defined cost functions with different estimators, specified with the keyword parameter cost_type:
